@@ -8,25 +8,58 @@ from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+def paginate(request, selection):
+    page = request.args.get('page', 1 , type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+
+    items = [item.format() for item in selection]
+    paginated = items[start:end]
+    return paginated
+
+def formatCategories(categories):
+    body = {}
+    for category in categories:
+            body[category.id] = category.type
+    return body
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
     setup_db(app)
+    cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
-    """
-    @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
-    """
+    # CORS Headers 
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE,OPTIONS')
+        return response
 
-    """
-    @TODO: Use the after_request decorator to set Access-Control-Allow
-    """
+    @app.route("/categories", methods=["GET"])
+    def get_categories():
+        categories = Category.query.order_by(Category.id).all()
+        body = formatCategories(categories)
+        return jsonify(
+            {
+                "categories": body
+            }
+        )
 
-    """
-    @TODO:
-    Create an endpoint to handle GET requests
-    for all available categories.
-    """
-
+    @app.route("/questions", methods=["GET"])
+    def get_questions():
+        questions = Question.query.order_by(Question.id).all()
+        categories = Category.query.order_by(Category.id).all()
+        categoriesResult = formatCategories(categories)
+        paginated = paginate(request, questions)
+        return jsonify(
+            {
+                "categories": categoriesResult,
+                "questions": paginated,
+                "totalQuestions": len(Question.query.all()),
+                "currentCategory": "History"
+            }
+        )
 
     """
     @TODO:
