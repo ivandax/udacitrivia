@@ -63,18 +63,20 @@ def create_app(test_config=None):
         )
         return result
 
-    """
-    @TODO:
-    Create an endpoint to handle GET requests for questions,
-    including pagination (every 10 questions).
-    This endpoint should return a list of questions,
-    number of total questions, current category, categories.
+    @app.route("/questions/<int:question_id>", methods=["DELETE"])
+    def delete_question(question_id):
+        question = Question.query.filter(Question.id == question_id).one_or_none()
 
-    TEST: At this point, when you start the application
-    you should see questions and categories generated,
-    ten questions per page and pagination at the bottom of the screen for three pages.
-    Clicking on the page numbers should update the questions.
-    """
+        if question is None:
+            abort(404)
+
+        question.delete()
+            
+        return jsonify({
+                "success": True,
+                "action": "Delete"
+            }
+        )
 
     """
     @TODO:
@@ -105,6 +107,20 @@ def create_app(test_config=None):
     only question that include that string within their question.
     Try using the word "title" to start.
     """
+
+    @app.route("/categories/<int:category_id>/questions", methods=["GET"])
+    def get_questions_by_category(category_id):
+        questions = Question.query.order_by(Question.id).filter(Question.category == category_id).all()
+        selected_category = Category.query.filter(Category.id == category_id).one_or_none()
+        allQuestions = Question.query.all()
+        result = jsonify(
+            {
+                "questions": [question.format() for question in questions],
+                "total_questions": len(allQuestions),
+                "current_category": selected_category.type
+            }
+        )
+        return result
 
     """
     @TODO:
