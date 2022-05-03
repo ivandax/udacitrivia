@@ -3,6 +3,7 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
+import sys
 
 from models import setup_db, Question, Category
 
@@ -26,8 +27,9 @@ def formatCategories(categories):
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
+    app.config['CORS_HEADERS'] = 'Content-Type'
     setup_db(app)
-    cors = CORS(app, resources={r"/*": {"origins": "*"}})
+    cors = CORS(app)
 
     # CORS Headers 
     @app.after_request
@@ -78,24 +80,34 @@ def create_app(test_config=None):
             }
         )
 
-    """
-    @TODO:
-    Create an endpoint to DELETE question using a question ID.
-
-    TEST: When you click the trash icon next to a question, the question will be removed.
-    This removal will persist in the database and when you refresh the page.
-    """
-
-    """
-    @TODO:
-    Create an endpoint to POST a new question,
-    which will require the question and answer text,
-    category, and difficulty score.
-
-    TEST: When you submit a question on the "Add" tab,
-    the form will clear and the question will appear at the end of the last page
-    of the questions list in the "List" tab.
-    """
+    @app.route("/questions", methods=["POST"])
+    # @cross_origin
+    def questions():
+        body = request.get_json()
+        search = body.get("searchTerm", None)
+        if search is None:
+            question = body.get("question", None)
+            category = body.get("category", None)
+            difficulty = body.get("difficulty", None)
+            answer = body.get("answer", None)
+            try:
+                newQuestion = Question(question=question, category=category, difficulty=difficulty, answer=answer)
+                newQuestion.insert()
+                return jsonify({
+                    "success": True
+                })
+            except:
+                print(sys.exc_info())
+                abort(404)
+        else:
+            questions = Question.query.filter(Question.question.ilike(f'%{search}%'))
+            formatted = [q.format() for q in questions]
+            return jsonify({
+                "total_questions": len(formatted),
+                "current_category": "Entertainment",
+                "questions": formatted
+            }
+        )
 
     """
     @TODO:
@@ -124,15 +136,6 @@ def create_app(test_config=None):
 
     """
     @TODO:
-    Create a GET endpoint to get questions based on category.
-
-    TEST: In the "List" tab / main screen, clicking on one of the
-    categories in the left column will cause only questions of that
-    category to be shown.
-    """
-
-    """
-    @TODO:
     Create a POST endpoint to get questions to play the quiz.
     This endpoint should take category and previous question parameters
     and return a random questions within the given category,
@@ -148,10 +151,6 @@ def create_app(test_config=None):
     Create error handlers for all expected errors
     including 404 and 422.
     """
-    
-    @app.route("/")
-    def hello():
-        return jsonify({"message": "Hello world"})
 
     return app
 

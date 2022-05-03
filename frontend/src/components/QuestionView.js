@@ -90,10 +90,10 @@ class QuestionView extends Component {
       dataType: "json",
       contentType: "application/json",
       data: JSON.stringify({ searchTerm: searchTerm }),
-      xhrFields: {
-        withCredentials: true,
-      },
-      crossDomain: true,
+      // xhrFields: {
+      //   withCredentials: true,
+      // },
+      // crossDomain: true,
       success: (result) => {
         this.setState({
           questions: result.questions,
