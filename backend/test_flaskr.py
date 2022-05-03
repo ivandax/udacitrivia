@@ -25,6 +25,8 @@ class TriviaTestCase(unittest.TestCase):
             # create all tables
             self.db.create_all()
     
+        self.search = {"searchTerm": "what"}
+    
     def tearDown(self):
         """Executed after reach test"""
         pass
@@ -32,36 +34,49 @@ class TriviaTestCase(unittest.TestCase):
     def test_get_categories(self):
         res = self.client().get("/categories")
         data =json.loads(res.data)
-
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data["categories"])
 
     def test_get_questions(self):
         res = self.client().get("/questions")
         data =json.loads(res.data)
-
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data["questions"])
 
     def test_get_questions_by_correct_page(self):
         res = self.client().get("/questions?page=1")
         data =json.loads(res.data)
-
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data["questions"])
 
     def test_get_questions_empty(self):
         res = self.client().get("/questions?page=1000")
         data =json.loads(res.data)
-
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(data["questions"]), 0)
 
     def test_failure(self):
         res = self.client().get("/questionsx")
         data =json.loads(res.data)
-
         self.assertEqual(res.status_code, 404)
+
+    def test_delete_question_success(self):
+        before = Question.query.count()
+        res = self.client().delete("/questions/9")
+        after = Question.query.count()
+        data =json.loads(res.data)
+        self.assertEqual(res.status_code, 204)
+        self.assertEqual(before - 1, after)
+
+    def test_delete_question_failure(self):
+        res = self.client().delete("/questions/TTTT")
+        data =json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+
+    def test_post_question_search(self):
+        res = self.client().post("/questions", json=self.search)
+        data =json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
 
 
 # Make the tests conveniently executable
