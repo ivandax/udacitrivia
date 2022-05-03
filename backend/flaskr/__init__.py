@@ -52,14 +52,16 @@ def create_app(test_config=None):
         categories = Category.query.order_by(Category.id).all()
         categoriesResult = formatCategories(categories)
         paginated = paginate(request, questions)
-        return jsonify(
+        allQuestions = Question.query.all()
+        result = jsonify(
             {
                 "categories": categoriesResult,
                 "questions": paginated,
-                "totalQuestions": len(Question.query.all()),
-                "currentCategory": "History"
+                "total_questions": len(allQuestions),
+                "current_category": "History"
             }
         )
+        return result
 
     """
     @TODO:
