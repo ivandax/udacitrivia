@@ -28,6 +28,8 @@ class TriviaTestCase(unittest.TestCase):
         self.search = {"searchTerm": "what"}
         self.newQuestion = {"question":"test999", "category":4, "difficulty":2, "answer":"tesla"}
         self.newQuestionWrong = {}
+        self.quizPayload = {"previous_questions": [], "quiz_category": {"type": "Science", "id": "1"}}
+        self.quizPayloadWrong = {"previous_questions": "string"}
     
     def tearDown(self):
         """Executed after reach test"""
@@ -90,6 +92,21 @@ class TriviaTestCase(unittest.TestCase):
         data =json.loads(res.data)
         self.assertEqual(res.status_code, 405)
 
+    def test_get_questions_by_category(self):
+        res = self.client().get("/categories/2/questions")
+        data =json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["questions"])
+
+    def test_post_question_quizz(self):
+        res = self.client().post("/quizzes", json=self.quizPayload)
+        data =json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+
+    def test_post_question_quizz_failure(self):
+        res = self.client().post("/quizzes", json=self.quizPayloadWrong)
+        data =json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
