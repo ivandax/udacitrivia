@@ -26,6 +26,8 @@ class TriviaTestCase(unittest.TestCase):
             self.db.create_all()
     
         self.search = {"searchTerm": "what"}
+        self.newQuestion = {"question":"test999", "category":4, "difficulty":2, "answer":"tesla"}
+        self.newQuestionWrong = {}
     
     def tearDown(self):
         """Executed after reach test"""
@@ -77,6 +79,16 @@ class TriviaTestCase(unittest.TestCase):
         res = self.client().post("/questions", json=self.search)
         data =json.loads(res.data)
         self.assertEqual(res.status_code, 200)
+
+    def test_post_question_new(self):
+        res = self.client().post("/questions", json=self.newQuestion)
+        data =json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+
+    def test_post_question_new_failure(self):
+        res = self.client().post("/questions/5", json=self.newQuestionWrong)
+        data =json.loads(res.data)
+        self.assertEqual(res.status_code, 405)
 
 
 # Make the tests conveniently executable
